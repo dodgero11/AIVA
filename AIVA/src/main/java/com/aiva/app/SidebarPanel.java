@@ -5,10 +5,6 @@ import java.awt.Color;
 import java.awt.Component;
 import java.awt.Dimension;
 import java.awt.Font;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.Insets;
-import java.awt.RenderingHints;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
@@ -19,7 +15,6 @@ import javax.swing.JButton;
 import javax.swing.JLabel;
 import javax.swing.JPanel;
 import javax.swing.SwingConstants;
-import javax.swing.border.AbstractBorder;
 
 public class SidebarPanel extends JPanel {
     private AIVAApplication app;
@@ -51,7 +46,7 @@ public class SidebarPanel extends JPanel {
         topPanel.setBackground(Color.WHITE);
         topPanel.setBorder(BorderFactory.createEmptyBorder(15, 15, 15, 15));
         
-        JLabel logoLabel = new JLabel("AIVA");
+        JLabel logoLabel = new JLabel("AIVA", SwingConstants.CENTER);
         logoLabel.setFont(new Font("Arial", Font.BOLD, 48));
         logoLabel.setForeground(new Color(60, 40, 80));
         topPanel.add(logoLabel, BorderLayout.CENTER);
@@ -99,60 +94,6 @@ public class SidebarPanel extends JPanel {
         navPanel.add(performanceStatsBtn);
         
         add(navPanel, BorderLayout.CENTER);
-        
-        // Create user panel at bottom
-        userPanel = new JPanel(new BorderLayout());
-        userPanel.setBackground(Color.WHITE);
-        userPanel.setBorder(BorderFactory.createEmptyBorder(10, 15, 10, 15));
-        
-        JPanel userInfoPanel = new JPanel(new BorderLayout(10, 0));
-        userInfoPanel.setBackground(Color.WHITE);
-        
-        // User avatar (circle)
-        JLabel avatarLabel = new JLabel("H");
-        avatarLabel.setOpaque(true);
-        avatarLabel.setBackground(new Color(138, 43, 226));
-        avatarLabel.setForeground(Color.WHITE);
-        avatarLabel.setFont(new Font("Arial", Font.BOLD, 14));
-        avatarLabel.setHorizontalAlignment(JLabel.CENTER);
-        avatarLabel.setPreferredSize(new Dimension(30, 30));
-        
-        // Make the avatar circular
-        avatarLabel.setBorder(new AbstractBorder() {
-            @Override
-            public void paintBorder(Component c, Graphics g, int x, int y, int width, int height) {
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
-                g2.setColor(c.getBackground());
-                g2.fillOval(x, y, width - 1, height - 1);
-                g2.dispose();
-            }
-            
-            @Override
-            public Insets getBorderInsets(Component c) {
-                return new Insets(0, 0, 0, 0);
-            }
-            
-            @Override
-            public boolean isBorderOpaque() {
-                return true;
-            }
-        });
-        
-        JLabel usernameLabel = new JLabel("HCMUS");
-        usernameLabel.setFont(new Font("Arial", Font.PLAIN, 12));
-        
-        JLabel dropdownIcon = new JLabel("▼");
-        dropdownIcon.setFont(new Font("Arial", Font.PLAIN, 8));
-        dropdownIcon.setForeground(Color.GRAY);
-        
-        userInfoPanel.add(avatarLabel, BorderLayout.WEST);
-        userInfoPanel.add(usernameLabel, BorderLayout.CENTER);
-        userInfoPanel.add(dropdownIcon, BorderLayout.EAST);
-        
-        userPanel.add(userInfoPanel, BorderLayout.CENTER);
-        
-        add(userPanel, BorderLayout.SOUTH);
         
         // Set initial selected button
         selectButton(createVideoBtn);
