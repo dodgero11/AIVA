@@ -14,9 +14,9 @@ repositories {
 }
 
 dependencies {
-    // Add dependencies here if needed
-    // For example:
-    // implementation 'com.formdev:flatlaf:2.0.1'  // Modern Look and Feel
+    implementation 'org.swinglabs.swingx:swingx-all:1.6.5-1'
+    implementation 'org.xerial:sqlite-jdbc:3.43.2.1'
+    implementation 'org.slf4j:slf4j-simple:2.0.12'
 }
 
 application {
