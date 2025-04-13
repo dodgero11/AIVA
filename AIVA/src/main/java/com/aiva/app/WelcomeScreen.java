@@ -27,15 +27,18 @@ import com.aiva.service.VideoGenerationService;
 
 public class WelcomeScreen extends JPanel {
     private VideoGenerationService videoService;
-
+    private AIVAApplication application;
     private int userId;
     
-    public WelcomeScreen(int currentUserId) {
+    public WelcomeScreen(int currentUserId, AIVAApplication application) {
         setLayout(new BorderLayout());
         setBackground(new Color(245, 245, 250));
 
         // Store the current user's ID
         userId = currentUserId;
+
+        // Store the AIVAApplication instance
+        this.application = application;
 
         // Initialize video generation services
         videoService = new VideoGenerationService();
@@ -111,6 +114,9 @@ public class WelcomeScreen extends JPanel {
                     JOptionPane.WARNING_MESSAGE);
                 return;
             }
+
+            // Show the script editor screen with the prompt
+            application.showScriptEditor(prompt);
             
             // Disable button during generation
             generateButton.setEnabled(false);
@@ -198,7 +204,7 @@ public class WelcomeScreen extends JPanel {
                 styleChoicesBox.setSelectedItem("Phổ thông");
             } else if (selectedSize.equals("Chuyên sâu")) {
                 styleChoicesBox.setSelectedItem("Chuyên sâu");
-            } 
+            }
         });
 
         // Add label and combobox to panel
