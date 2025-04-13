@@ -18,11 +18,11 @@ public class AIVAApplication {
     private CardLayout cardLayout;
     private JPanel mainPanel;
     private SidebarPanel sidebarPanel;
-    private JPanel contentPanel;
     
     // Screen panels
     private WelcomeScreen welcomeScreen;
     private VideoProductionScreen videoProductionScreen;
+    private ScriptEditorScreen scriptEditorScreen;
     private LoginScreen loginScreen;
     
     public AIVAApplication() {
@@ -61,7 +61,7 @@ public class AIVAApplication {
         mainFrame.getContentPane().removeAll();
         
         // Create the main panel with BorderLayout
-        contentPanel = new JPanel(new BorderLayout());
+        JPanel contentPanel = new JPanel(new BorderLayout());
         
         // Create the sidebar
         sidebarPanel = new SidebarPanel(this);
@@ -72,12 +72,14 @@ public class AIVAApplication {
         mainPanel = new JPanel(cardLayout);
         
         // Create screens with user ID
-        welcomeScreen = new WelcomeScreen(user.getId());
+        welcomeScreen = new WelcomeScreen(user.getId(), this);
         videoProductionScreen = new VideoProductionScreen();
+        scriptEditorScreen = new ScriptEditorScreen(this, user.getId());
         
         // Add screens to card layout
         mainPanel.add(welcomeScreen, "WELCOME");
         mainPanel.add(videoProductionScreen, "VIDEO_PRODUCTION");
+        mainPanel.add(scriptEditorScreen, "SCRIPT_EDITOR");
         
         // Show welcome screen by default
         cardLayout.show(mainPanel, "WELCOME");
@@ -95,6 +97,12 @@ public class AIVAApplication {
     // Method to switch between screens
     public void showScreen(String screenName) {
         cardLayout.show(mainPanel, screenName);
+    }
+    
+    // Method to show the script editor with a prompt
+    public void showScriptEditor(String prompt) {
+        scriptEditorScreen.loadScriptForPrompt(prompt);
+        showScreen("SCRIPT_EDITOR");
     }
     
     // Method to handle logout
