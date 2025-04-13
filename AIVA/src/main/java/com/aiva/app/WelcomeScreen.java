@@ -16,22 +16,29 @@ import javax.swing.BoxLayout;
 import javax.swing.JButton;
 import javax.swing.JComboBox;
 import javax.swing.JLabel;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
-import javax.swing.JSeparator;
 import javax.swing.JTextArea;
-import javax.swing.JTextField;
-import javax.swing.JToggleButton;
+import javax.swing.SwingUtilities;
+
+import com.aiva.model.Video;
+import com.aiva.service.VideoGenerationService;
 
 public class WelcomeScreen extends JPanel {
-    private JTextField promptField;
-    private JButton generateButton;
-    private JPanel advancedSettingsPanel;
-    private boolean advancedSettingsVisible = false;
+    private VideoGenerationService videoService;
+
+    private int userId;
     
-    public WelcomeScreen() {
+    public WelcomeScreen(int currentUserId) {
         setLayout(new BorderLayout());
         setBackground(new Color(245, 245, 250));
+
+        // Store the current user's ID
+        userId = currentUserId;
+
+        // Initialize video generation services
+        videoService = new VideoGenerationService();
         
         // Main content panel
         JPanel contentPanel = new JPanel();
@@ -47,7 +54,7 @@ public class WelcomeScreen extends JPanel {
         welcomeLabel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         
         // Prompt input field
-        JTextArea promptArea = new JTextArea("Enter prompt here");
+        JTextArea promptArea = new JTextArea("Enter theme here");
         promptArea.setFont(new Font("Arial", Font.PLAIN, 14));
         promptArea.setForeground(Color.GRAY);
         promptArea.setBackground(new Color(230, 230, 230));
@@ -68,7 +75,7 @@ public class WelcomeScreen extends JPanel {
         promptArea.addFocusListener(new FocusAdapter() {
             @Override
             public void focusGained(FocusEvent e) {
-                if (promptArea.getText().equals("Enter prompt here")) {
+                if (promptArea.getText().equals("Enter theme here")) {
                     promptArea.setText("");
                     promptArea.setForeground(Color.BLACK);
                 }
@@ -77,14 +84,14 @@ public class WelcomeScreen extends JPanel {
             @Override
             public void focusLost(FocusEvent e) {
                 if (promptArea.getText().isEmpty()) {
-                    promptArea.setText("Enter prompt here");
+                    promptArea.setText("Enter theme here");
                     promptArea.setForeground(Color.GRAY);
                 }
             }
         });
         
         // Generate button
-        generateButton = new JButton("Generate");
+        JButton generateButton = new JButton("Generate");
         generateButton.setFont(new Font("Arial", Font.BOLD, 14));
         generateButton.setForeground(Color.WHITE);
         generateButton.setBackground(new Color(138, 43, 226));
@@ -93,6 +100,63 @@ public class WelcomeScreen extends JPanel {
         generateButton.setPreferredSize(new Dimension(150, 40));
         generateButton.setMaximumSize(new Dimension(150, 40));
         generateButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        // Add action listener to generate button
+        generateButton.addActionListener(e -> {
+            String prompt = promptArea.getText();
+            if (prompt.isEmpty() || prompt.equals("Enter prompt here")) {
+                JOptionPane.showMessageDialog(this, 
+                    "Please enter a prompt for your video.", 
+                    "Empty Prompt", 
+                    JOptionPane.WARNING_MESSAGE);
+                return;
+            }
+            
+            // Disable button during generation
+            generateButton.setEnabled(false);
+            generateButton.setText("Generating...");
+            
+            // Generate video in background thread
+            new Thread(() -> {
+                Video video = videoService.generateVideo(prompt, userId);
+                
+                // Update UI on EDT
+                SwingUtilities.invokeLater(() -> {
+                    if (video != null) {
+                        JOptionPane.showMessageDialog(this, 
+                            "Video generation started! Video ID: " + video.getId(), 
+                            "Success", 
+                            JOptionPane.INFORMATION_MESSAGE);
+                    } else {
+                        JOptionPane.showMessageDialog(this, 
+                            "Failed to start video generation. Please try again.", 
+                            "Error", 
+                            JOptionPane.ERROR_MESSAGE);
+                    }
+                    
+                    // Re-enable button
+                    generateButton.setEnabled(true);
+                    generateButton.setText("Generate");
+                });
+            }).start();
+        });
+        
+        // Add hover effect to generate button
+        generateButton.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseEntered(MouseEvent e) {
+                if (generateButton.isEnabled()) {
+                    generateButton.setBackground(new Color(148, 53, 236));
+                }
+            }
+            
+            @Override
+            public void mouseExited(MouseEvent e) {
+                if (generateButton.isEnabled()) {
+                    generateButton.setBackground(new Color(138, 43, 226));
+                }
+            }
+        });
         
         // Add hover effect to generate button
         generateButton.addMouseListener(new MouseAdapter() {
@@ -107,145 +171,49 @@ public class WelcomeScreen extends JPanel {
             }
         });
         
-        // Separator
-        JSeparator separator = new JSeparator();
-        separator.setMaximumSize(new Dimension(Integer.MAX_VALUE, 1));
-        separator.setForeground(new Color(200, 200, 200));
-        separator.setAlignmentX(Component.CENTER_ALIGNMENT);
-        
-        // Advanced settings header panel
-        JPanel advancedHeaderPanel = new JPanel(new BorderLayout());
-        advancedHeaderPanel.setBackground(new Color(245, 245, 250));
-        advancedHeaderPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
-        advancedHeaderPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        
-        JLabel advancedLabel = new JLabel("Advance setting");
-        advancedLabel.setFont(new Font("Arial", Font.BOLD, 14));
-        
-        JLabel arrowLabel = new JLabel("▼");
-        arrowLabel.setFont(new Font("Arial", Font.PLAIN, 12));
-        
-        advancedHeaderPanel.add(advancedLabel, BorderLayout.WEST);
-        advancedHeaderPanel.add(arrowLabel, BorderLayout.EAST);
-        
-        // Make the advanced header clickable
-        advancedHeaderPanel.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                advancedSettingsVisible = !advancedSettingsVisible;
-                advancedSettingsPanel.setVisible(advancedSettingsVisible);
-                arrowLabel.setText(advancedSettingsVisible ? "▲" : "▼");
-                revalidate();
-                repaint();
-            }
-        });
-        
-        // Advanced settings panel
-        advancedSettingsPanel = new JPanel();
-        advancedSettingsPanel.setLayout(new BoxLayout(advancedSettingsPanel, BoxLayout.Y_AXIS));
-        advancedSettingsPanel.setBackground(new Color(245, 245, 250));
-        advancedSettingsPanel.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 0));
-        advancedSettingsPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        
+        // 
         // Create panel with label and combobox
-        JPanel frameSizePanel = new JPanel(new BorderLayout(10, 0));
-        frameSizePanel.setBackground(new Color(245, 245, 250));
-        frameSizePanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
+        JPanel styleChoicesPanel = new JPanel(new BorderLayout(10, 0));
+        styleChoicesPanel.setBackground(new Color(245, 245, 250));
+        styleChoicesPanel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
 
         // Create label
-        JLabel frameSizeLabel = new JLabel("Frame size:");
+        JLabel frameSizeLabel = new JLabel("Phong cách nội dung:");
         frameSizeLabel.setFont(new Font("Arial", Font.PLAIN, 14));
 
-        // Create combobox
-        String[] frameSizes = {"512x512", "1024x1024"};
-        JComboBox<String> frameSizeBox = new JComboBox<>(frameSizes);
-        frameSizeBox.setFont(new Font("Arial", Font.PLAIN, 14));
-        frameSizeBox.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200), 1, true));
-        frameSizeBox.setPreferredSize(new Dimension(100, 25));
-        frameSizeBox.setMaximumSize(new Dimension(100, 25));
+        // Create style choices
+        String[] styleChoices = {"Trẻ em", "Phổ thông", "Chuyên sâu"};
+        JComboBox<String> styleChoicesBox = new JComboBox<>(styleChoices);
+        styleChoicesBox.setFont(new Font("Arial", Font.PLAIN, 14));
+        styleChoicesBox.setBorder(BorderFactory.createLineBorder(new Color(200, 200, 200), 1, true));
+        styleChoicesBox.setPreferredSize(new Dimension(100, 30));
+        styleChoicesBox.setMaximumSize(new Dimension(100, 30));
 
         // Box Listener for Frame Size
-        frameSizeBox.addActionListener(e -> {
-            String selectedSize = (String) frameSizeBox.getSelectedItem();
-            if (selectedSize.equals("512x512")) {
-                frameSizeBox.setSelectedItem("512x512");
-            } else if (selectedSize.equals("1024x1024")) {
-                frameSizeBox.setSelectedItem("1024x1024");
-            }
+        styleChoicesBox.addActionListener(e -> {
+            String selectedSize = (String) styleChoicesBox.getSelectedItem();
+            if (selectedSize.equals("Trẻ em")) {
+                styleChoicesBox.setSelectedItem("Trẻ em");
+            } else if (selectedSize.equals("Phổ thông")) {
+                styleChoicesBox.setSelectedItem("Phổ thông");
+            } else if (selectedSize.equals("Chuyên sâu")) {
+                styleChoicesBox.setSelectedItem("Chuyên sâu");
+            } 
         });
 
-        // Add components to panel
-        frameSizePanel.add(frameSizeLabel, BorderLayout.WEST);
-        frameSizePanel.add(frameSizeBox, BorderLayout.EAST);
+        // Add label and combobox to panel
+        styleChoicesPanel.add(frameSizeLabel, BorderLayout.WEST);
+        styleChoicesPanel.add(styleChoicesBox, BorderLayout.EAST);
 
-        // Generator model setting
-        JPanel generatorPanel = createSettingPanel("Generator model", "Dall-E3");
-        
-        // Art style setting
-        JPanel artStylePanel = createSettingPanel("Art style", "Stock photo");
-        
-        // AI voice setting
-        JPanel aiVoicePanel = createSettingPanel("AI voice", null);
-
-        JToggleButton aiVoiceToggle = new JToggleButton();
-        aiVoiceToggle.setSelected(true);
-        aiVoiceToggle.setPreferredSize(new Dimension(40, 20));
-        aiVoiceToggle.setMaximumSize(new Dimension(40, 20));
-        aiVoiceToggle.setBackground(new Color(138, 43, 226));
-        aiVoicePanel.add(aiVoiceToggle, BorderLayout.EAST);
-        
-        // Add settings to advanced panel
-        advancedSettingsPanel.add(frameSizePanel);
-        advancedSettingsPanel.add(Box.createRigidArea(new Dimension(0, 10)));
-        advancedSettingsPanel.add(generatorPanel);
-        advancedSettingsPanel.add(Box.createRigidArea(new Dimension(0, 10)));
-        advancedSettingsPanel.add(artStylePanel);
-        advancedSettingsPanel.add(Box.createRigidArea(new Dimension(0, 10)));
-        advancedSettingsPanel.add(aiVoicePanel);
-        
-        // Hide advanced settings by default
-        advancedSettingsPanel.setVisible(false);
-        
         // Add components to content panel
         contentPanel.add(welcomeLabel);
         contentPanel.add(scrollPane);
         contentPanel.add(Box.createRigidArea(new Dimension(0, 20)));
         contentPanel.add(generateButton);
         contentPanel.add(Box.createRigidArea(new Dimension(0, 30)));
-        contentPanel.add(separator);
-        contentPanel.add(Box.createRigidArea(new Dimension(0, 20)));
-        contentPanel.add(advancedHeaderPanel);
-        contentPanel.add(advancedSettingsPanel);
+        contentPanel.add(styleChoicesPanel);
         
         // Add content panel to main panel
         add(new JScrollPane(contentPanel), BorderLayout.CENTER);
-    }
-    
-    private JPanel createSettingPanel(String labelText, String valueText) {
-        JPanel panel = new JPanel(new BorderLayout(10, 0));
-        panel.setBackground(new Color(245, 245, 250));
-        panel.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
-        
-        JLabel label = new JLabel(labelText);
-        label.setFont(new Font("Arial", Font.PLAIN, 14));
-        
-        panel.add(label, BorderLayout.WEST);
-        
-        if (valueText != null) {
-            JTextField valueField = new JTextField(valueText);
-            valueField.setFont(new Font("Arial", Font.PLAIN, 14));
-            valueField.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(200, 200, 200), 1, true),
-                BorderFactory.createEmptyBorder(2, 5, 2, 5)
-            ));
-            valueField.setEditable(false);
-            valueField.setBackground(Color.WHITE);
-            valueField.setPreferredSize(new Dimension(100, 25));
-            valueField.setMaximumSize(new Dimension(100, 25));
-            
-            panel.add(valueField, BorderLayout.EAST);
-        }
-        
-        return panel;
     }
 }

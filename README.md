@@ -5,9 +5,8 @@ Hướng dẫn chạy app:
 
 Cần làm:
  - Cải tiến UI
- - Thêm Business Layer Logic
- - Thêm Data Layer
- - Chọn database cho app
+ - Cải tiến Business Layer Logic
+ - Cải tiến Data Layer
  - Kết nối app với script python để lấy video
 
 Đang thực hiện/cải tiến:
